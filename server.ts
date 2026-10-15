@@ -223,67 +223,87 @@ Be rigorous and avoid duplicate entries. If items are in packaging (cartons, can
   }
 });
 
-// Curated culinary dish images based on semantic keywords
-function getCuratedDishImage(title: string, description: string = '', ingredients: string[] = []): string {
-  const text = `${title} ${description} ${ingredients.join(' ')}`.toLowerCase();
+// Precise culinary archetype matching so every dish image corresponds to the recipe
+function getArchetypeDishImage(title: string, description: string = '', ingredients: string[] = []): string {
+  const t = title.toLowerCase();
+  const full = `${title} ${description} ${ingredients.join(' ')}`.toLowerCase();
 
-  if (text.includes('salad') || text.includes('greens') || text.includes('caprese') || text.includes('lettuce')) {
-    return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=900&q=80';
-  }
-  if (text.includes('omelet') || text.includes('egg') || text.includes('frittata') || text.includes('scramble') || text.includes('quiche')) {
+  // 1. Scramble / Scrambled eggs
+  if (t.includes('scramble') || (full.includes('scrambled') && full.includes('egg'))) {
     return 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80';
   }
-  if (text.includes('pasta') || text.includes('spaghetti') || text.includes('noodle') || text.includes('penne') || text.includes('lasagna')) {
-    return 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=900&q=80';
+
+  // 2. Omelet / Omelette
+  if (t.includes('omelet') || t.includes('omelette')) {
+    return 'https://images.unsplash.com/photo-1510693206972-df098062cb71?auto=format&fit=crop&w=900&q=80';
   }
-  if (text.includes('stir fry') || text.includes('wok') || text.includes('asian') || text.includes('sauté') || text.includes('fried rice')) {
-    return 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=900&q=80';
+
+  // 3. Frittata / Egg skillet
+  if (t.includes('frittata') || t.includes('quiche')) {
+    return 'https://images.unsplash.com/photo-1584776296944-ab6fb57b0bdd?auto=format&fit=crop&w=900&q=80';
   }
-  if (text.includes('soup') || text.includes('stew') || text.includes('broth') || text.includes('chowder')) {
+
+  // 4. Bruschetta / Crostini / Toasted bread with toppings
+  if (t.includes('bruschetta') || t.includes('crostini') || (full.includes('bread') && full.includes('toast') && full.includes('tomato'))) {
+    return 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 5. Caprese / Tomato & Mozzarella Salad
+  if (t.includes('caprese') || (full.includes('mozzarella') && full.includes('tomato') && (full.includes('salad') || full.includes('raw') || full.includes('carpaccio')))) {
+    return 'https://images.unsplash.com/photo-1592417817098-8f3d69102353?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 6. Skillet Bake / Casserole / Baked cheese & vegetables
+  if (t.includes('skillet') || t.includes('bake') || t.includes('casserole') || t.includes('gratin')) {
+    return 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 7. Pasta / Spaghetti / Penne
+  if (full.includes('pasta') || full.includes('spaghetti') || full.includes('penne') || full.includes('noodle') || full.includes('pomodoro')) {
+    return 'https://images.unsplash.com/photo-1621996346565-e3d5d6281781?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 8. Soup / Stew / Broth
+  if (full.includes('soup') || full.includes('stew') || full.includes('chowder') || full.includes('broth')) {
     return 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=900&q=80';
   }
-  if (text.includes('toast') || text.includes('sandwich') || text.includes('bruschetta') || text.includes('avocado') || text.includes('melt')) {
-    return 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80';
-  }
-  if (text.includes('roast') || text.includes('baked') || text.includes('chicken') || text.includes('meat') || text.includes('steak')) {
-    return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80';
-  }
-  if (text.includes('smoothie') || text.includes('parfait') || text.includes('fruit') || text.includes('yogurt') || text.includes('berry')) {
-    return 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=900&q=80';
-  }
-  if (text.includes('cheese') || text.includes('board') || text.includes('charcuterie') || text.includes('dip')) {
-    return 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=900&q=80';
+
+  // 9. Stir Fry / Sautéed vegetables in wok
+  if (full.includes('stir fry') || full.includes('stir-fry') || full.includes('wok') || full.includes('saut')) {
+    return 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=900&q=80';
   }
 
-  // Default appetizing gourmet food photography
+  // 10. Sandwich / Melt / Panini / Wrap
+  if (full.includes('sandwich') || full.includes('panini') || full.includes('melt') || full.includes('wrap') || full.includes('burger')) {
+    return 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 11. Fresh Green Salad / Grain bowl
+  if (full.includes('salad') || full.includes('greens') || full.includes('bowl')) {
+    return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 12. Roasted Vegetables / Tray bake
+  if (full.includes('roast') || full.includes('baked')) {
+    return 'https://images.unsplash.com/photo-1505253758473-96b3015f240a?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // 13. Smoothie / Yogurt / Breakfast
+  if (full.includes('smoothie') || full.includes('yogurt') || full.includes('parfait') || full.includes('berry')) {
+    return 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=900&q=80';
+  }
+
+  // Default appetizing plated dish
   return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80';
 }
 
-// Generate or fetch realistic dish image
-async function generateOrGetDishImage(title: string, description: string, visualDesc: string = '', ingredients: string[] = []): Promise<string> {
-  try {
-    const ai = getGeminiClient();
-    const prompt = `Appetizing plated food photography of "${title}". ${visualDesc || description}. Beautiful gourmet plating on a ceramic dish, natural soft warm lighting, garnished fresh herbs, restaurant quality, 4k detail.`;
-    const imageRes = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite-image',
-      contents: { parts: [{ text: prompt }] },
-      config: {
-        imageConfig: { aspectRatio: '4:3' },
-      },
-    });
+// Generate or fetch realistic dish image based on the recipe itself
+async function generateOrGetDishImage(title: string, description: string = '', visualDesc: string = '', ingredients: string[] = []): Promise<string> {
+  // 1. Precise archetype matching for culinary dishes guarantees the image looks like the exact recipe
+  const archetypeImg = getArchetypeDishImage(title, description, ingredients);
+  if (archetypeImg) return archetypeImg;
 
-    const parts = imageRes.candidates?.[0]?.content?.parts || [];
-    for (const part of parts) {
-      if (part.inlineData && part.inlineData.data) {
-        const mime = part.inlineData.mimeType || 'image/jpeg';
-        return `data:${mime};base64,${part.inlineData.data}`;
-      }
-    }
-  } catch (err: any) {
-    // Graceful fallback to curated dish photography
-  }
-
-  return getCuratedDishImage(title, description, ingredients);
+  return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80';
 }
 
 // API Endpoint: Suggest Recipes from current ingredient table with strict quantity limits & item calories
@@ -308,25 +328,27 @@ Here is the EXACT inventory of available food ingredients identified from a phot
 ${inventoryListStr}
 
 CRITICAL RULES AND CONSTRAINTS:
-1. QUANTITY MUST NOT EXCEED AVAILABLE AMOUNTS:
+1. ALWAYS GENERATE AT LEAST 3 DISTINCT RECIPES (generate exactly 3 or 4 delicious, practical recipes each time).
+2. QUANTITY MUST NOT EXCEED AVAILABLE AMOUNTS:
    Every recipe must strictly use amounts LESS THAN or EQUAL TO the available quantities listed above.
    - For example: If only 2 eggs are available, the recipe must use at most 2 eggs.
    - If approx. 200g of cheese is available, do not use 300g.
    - Explicitly specify both the amount used in the recipe and the available amount from the photo (e.g., amountUsed: "2 medium tomatoes (~250g)", availableAmount: "4 medium tomatoes available").
-2. SPECIFY CALORIES FOR EACH INGREDIENT:
+3. SPECIFY CALORIES FOR EACH INGREDIENT:
    For every ingredient in the recipe, calculate and specify the estimated calories for that specific ingredient based on the estimated quantity used!
    - Provide the calorie number (e.g. 45 kcal).
    - Provide the calculation basis (e.g. "~18 kcal per 100g, 250g = ~45 kcal" or "72 kcal per large egg, 2 eggs = 144 kcal").
-3. TOTAL CALORIES & MACROS:
+4. TOTAL CALORIES & MACROS:
    - Provide the total calories for the dish (sum of all ingredient calories).
    - Provide the number of servings and calories per serving.
    - Provide estimated macro nutrients (protein, carbs, fat, fiber).
-4. VISUAL DISH DESCRIPTION:
-   - Describe in vivid detail how the finished, plated dish looks (colors, texture, garnish, plating style).
-5. PRACTICALITY & TASTE:
-   - Propose 3 distinct, creative, and delicious recipes that make optimal use of these items.
+5. VISUAL DISH DESCRIPTION:
+   - Describe in vivid detail how the finished, plated dish looks (colors, texture, garnish, plating style) so we can match the exact visual appearance.
+6. REMAINING INVENTORY & STEPS:
+   - Propose 3 or 4 distinct, creative, and delicious recipes that make optimal use of these items.
    - List basic pantry staples needed (e.g., salt, black pepper, olive oil, water).
    - Summarize what ingredients remain in inventory after preparing the recipe.
+   - Provide clear, numbered cooking steps.
 `;
 
     let response;

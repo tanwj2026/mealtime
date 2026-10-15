@@ -14,7 +14,7 @@ import {
 import { Header } from './components/Header.tsx';
 import { CameraCapture } from './components/CameraCapture.tsx';
 import { IngredientTable } from './components/IngredientTable.tsx';
-import { RecipeModal } from './components/RecipeModal.tsx';
+import { RecipeSection } from './components/RecipeSection.tsx';
 import { PhotoViewerModal } from './components/PhotoViewerModal.tsx';
 import { IngredientItem, AnalysisResponseData, RecipeSuggestion } from './types.ts';
 
@@ -30,9 +30,10 @@ export default function App() {
   const [sceneDescription, setSceneDescription] = useState<string>('');
   const [detectedEnvironment, setDetectedEnvironment] = useState<string>('');
   const [recipeSuggestions, setRecipeSuggestions] = useState<RecipeSuggestion[]>([]);
+  const [isRecipeLoading, setIsRecipeLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
 
-  // Modals
-  const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+  // Photo viewer modal
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // Restore saved session if available
@@ -45,9 +46,13 @@ export default function App() {
           setIngredients(parsed.items);
           setSceneDescription(parsed.sceneDescription || '');
           setDetectedEnvironment(parsed.detectedEnvironment || '');
-          setRecipeSuggestions(parsed.recipeSuggestions || []);
           if (parsed.savedImage) {
             setCapturedImage(parsed.savedImage);
+          }
+          if (parsed.recipeSuggestions && parsed.recipeSuggestions.length > 0) {
+            setRecipeSuggestions(parsed.recipeSuggestions);
+          } else {
+            handleGenerateRecipes(parsed.items);
           }
         }
       }
@@ -133,25 +138,31 @@ export default function App() {
       }
 
       const data: AnalysisResponseData = result.data;
-      setIngredients(data.items || []);
+      const parsedItems = data.items || [];
+      setIngredients(parsedItems);
       setSceneDescription(data.sceneDescription || '');
       setDetectedEnvironment(data.detectedEnvironment || '');
-      setRecipeSuggestions(data.recipeSuggestions || []);
+      setRecipeSuggestions([]);
 
       // Persist in localStorage
       try {
         localStorage.setItem(
           LOCAL_STORAGE_KEY,
           JSON.stringify({
-            items: data.items,
+            items: parsedItems,
             sceneDescription: data.sceneDescription,
             detectedEnvironment: data.detectedEnvironment,
-            recipeSuggestions: data.recipeSuggestions,
+            recipeSuggestions: [],
             savedImage: base64,
           })
         );
       } catch (e) {
         console.warn('Could not cache analysis:', e);
+      }
+
+      // Automatically generate at least 3 recipe proposals right after ingredient identification
+      if (parsedItems.length > 0) {
+        handleGenerateRecipes(parsedItems);
       }
     } catch (err: any) {
       console.error('Error during analysis:', err);
@@ -160,6 +171,44 @@ export default function App() {
     } finally {
       setIsAnalyzing(false);
       setAnalysisProgress('');
+    }
+  };
+
+  // Generate at least 3 recipe ideas based strictly on available ingredients
+  const handleGenerateRecipes = async (itemsToUse: IngredientItem[] = ingredients) => {
+    if (!itemsToUse || itemsToUse.length === 0) return;
+    setIsRecipeLoading(true);
+    setRecipeError(null);
+    try {
+      const res = await fetch('/api/suggest-recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients: itemsToUse }),
+      });
+      const raw = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error('Unable to read recipe suggestions. Please tap Regenerate to try again.');
+      }
+      if (!res.ok || !data.success) {
+        throw new Error(data?.error || 'Failed to generate recipes');
+      }
+      const newRecipes: RecipeSuggestion[] = data.recipes || [];
+      setRecipeSuggestions(newRecipes);
+      try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...parsed, recipeSuggestions: newRecipes }));
+        }
+      } catch (e) {}
+    } catch (err: any) {
+      console.error('Error fetching recipes:', err);
+      setRecipeError(err.message || 'Could not generate recipes from ingredients.');
+    } finally {
+      setIsRecipeLoading(false);
     }
   };
 
@@ -275,15 +324,26 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Tabular Form */}
+                {/* 1. Ingredients Identified & Quantities in Tabular Form */}
                 <IngredientTable
                   items={ingredients}
                   sceneDescription={sceneDescription}
                   detectedEnvironment={detectedEnvironment}
                   onUpdateItems={handleUpdateItems}
-                  onOpenRecipes={() => setIsRecipeModalOpen(true)}
+                  onOpenRecipes={() => {
+                    document.getElementById('recipe-ideas-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   onOpenPhotoViewer={() => setIsPhotoModalOpen(true)}
                   hasPhoto={!!capturedImage}
+                />
+
+                {/* 2. Recipe Ideas - Follows immediately after ingredients list in main view */}
+                <RecipeSection
+                  recipes={recipeSuggestions}
+                  currentIngredients={ingredients}
+                  isLoading={isRecipeLoading}
+                  onRegenerate={() => handleGenerateRecipes(ingredients)}
+                  error={recipeError}
                 />
               </div>
             )}
@@ -299,29 +359,12 @@ export default function App() {
             <span>KitchenLens Vision Engine</span>
           </div>
           <p className="text-stone-400">
-            Powered by Google Gemini multimodal vision. Quantities are AI estimates based on visual cues.
+            Powered by Google Gemini multimodal vision. Quantities and nutrition values are AI estimates based on visual cues.
           </p>
         </div>
       </footer>
 
       {/* Modals */}
-      <RecipeModal
-        isOpen={isRecipeModalOpen}
-        onClose={() => setIsRecipeModalOpen(false)}
-        recipes={recipeSuggestions}
-        currentIngredients={ingredients}
-        onUpdateRecipes={(newRecipes) => {
-          setRecipeSuggestions(newRecipes);
-          try {
-            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ...parsed, recipeSuggestions: newRecipes }));
-            }
-          } catch (e) {}
-        }}
-      />
-
       <PhotoViewerModal
         isOpen={isPhotoModalOpen}
         onClose={() => setIsPhotoModalOpen(false)}
