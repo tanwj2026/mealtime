@@ -13,9 +13,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Body parser with 35MB limit for high-res camera photos
-app.use(express.json({ limit: '35mb' }));
-app.use(express.urlencoded({ limit: '35mb', extended: true }));
+// Body parser with 50MB limit for high-res camera photos
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Initialize Google Gemini API Client
 const getGeminiClient = () => {

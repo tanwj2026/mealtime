@@ -110,11 +110,26 @@ export default function App() {
         }),
       });
 
-      const result = await response.json();
       clearInterval(progressInterval);
+      const rawText = await response.text();
+      let result: any;
+
+      try {
+        result = JSON.parse(rawText);
+      } catch (jsonErr) {
+        // Handle non-JSON HTML error pages (e.g. 413, 502, 504)
+        if (response.status === 413) {
+          throw new Error('Image size is too large for the network gateway. Please try taking a closer photo or select another photo.');
+        } else if (response.status === 504 || response.status === 502) {
+          throw new Error('The vision analysis timed out. Please tap "Analyze & Estimate Quantities" to retry.');
+        } else if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}. Please try again.`);
+        }
+        throw new Error('Unable to parse server response. Please try scanning again.');
+      }
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to analyze ingredients');
+        throw new Error(result?.error || 'Failed to analyze ingredients. Please retry.');
       }
 
       const data: AnalysisResponseData = result.data;

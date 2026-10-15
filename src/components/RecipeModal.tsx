@@ -63,9 +63,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ingredients: currentIngredients }),
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        if (!res.ok) {
+          throw new Error(`Server returned status ${res.status}. Please tap Regenerate to try again.`);
+        }
+        throw new Error('Unable to read recipe suggestions. Please try again.');
+      }
+
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to generate recipes');
+        throw new Error(data?.error || 'Failed to generate recipes');
       }
       const fetchedRecipes: RecipeSuggestion[] = data.recipes || [];
       setRecipes(fetchedRecipes);

@@ -95,14 +95,29 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ onImageSelected, i
   const captureLiveFrame = () => {
     if (!videoRef.current) return;
     const video = videoRef.current;
+    // Limit max resolution to 1200px
+    const maxDim = 1200;
+    let w = video.videoWidth || 1280;
+    let h = video.videoHeight || 720;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) {
+        h = Math.round((h * maxDim) / w);
+        w = maxDim;
+      } else {
+        w = Math.round((w * maxDim) / h);
+        h = maxDim;
+      }
+    }
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const base64 = canvas.toDataURL('image/jpeg', 0.9);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(video, 0, 0, w, h);
+    const base64 = canvas.toDataURL('image/jpeg', 0.8);
     stopLiveCamera();
     setPreviewImage(base64);
     setImageMimeType('image/jpeg');
