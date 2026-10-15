@@ -1,0 +1,6 @@
+{
+  "name": "KitchenLens - AI Ingredient & Quantity Estimator",
+  "description": "Smart culinary vision app that scans your fridge or countertop to identify food ingredients and estimate quantities in a clean tabular view.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
